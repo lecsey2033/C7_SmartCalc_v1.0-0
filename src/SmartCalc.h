@@ -3,12 +3,52 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+// operators
+// 1 - '('
+// 2 - ')'
+// 3 - '+'
+// 4 - '-'
+// 5 - '*'
+// 6 - '/'
+// 7 - '^'
+// 8 - mod 
+// 9 - unary plus
+// 10 - unary minus
+// 11 - cos 
+// 12 - sin 
+// 13 - tan 
+// 14 - acos 
+// 15 - asin 
+// 16 - atan 
+// 17 - sqrt
+// 18 - ln 
+// 19 - log 
+// 20 - x
+
+typedef struct s_info {
+    double number;
+    int s_operator;
+    int priority;
+    int error;
+} info;
 
 typedef struct s_stack {
-    int data;
+    info data;
     struct s_stack *next;
 } t_stack;
 
-t_stack *create_node(int data);
+double polish_notation(const char *function);
+info divide_into_lexems(const char *function, int *i);
+void find_of_number(const char* function, char* number, int* i);
+info unary_or_not(const char* function, int* i);
+double operation(t_stack **stack_of_number, t_stack *stack_of_operator);
+void zeroing_info(info* data);
+t_stack *create_node(info data);
+void push(t_stack **stack, info data);
+void pop(t_stack **stack);
+void stack_print(t_stack *stack);
 
 #endif  // SRC_SMARTCALC_H_
