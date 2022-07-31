@@ -26,7 +26,6 @@
 // 17 - sqrt
 // 18 - ln 
 // 19 - log 
-// 20 - x
 
 typedef struct s_info {
     double number;
@@ -40,15 +39,16 @@ typedef struct s_stack {
     struct s_stack *next;
 } t_stack;
 
-double polish_notation(const char *function);
+double polish_notation(const char *function, int* error);
 info divide_into_lexems(const char *function, int *i);
-void find_of_number(const char* function, char* number, int* i);
+int find_of_number(const char* function, char* number, int* i);
 info unary_or_not(const char* function, int* i);
-double operation(t_stack **stack_of_number, t_stack *stack_of_operator);
+double operation(t_stack **stack_of_number, t_stack *stack_of_operator, int* err);
 void zeroing_info(info* data);
 t_stack *create_node(info data);
 void push(t_stack **stack, info data);
 void pop(t_stack **stack);
 void stack_print(t_stack *stack);
+int check_of_func(const char* function, int i);
 
 #endif  // SRC_SMARTCALC_H_
