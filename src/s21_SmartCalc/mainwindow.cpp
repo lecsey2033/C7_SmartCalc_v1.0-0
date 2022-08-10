@@ -69,9 +69,6 @@ void MainWindow::on_pushButton_AC_clicked()
 
 void MainWindow::on_pushButton_result_clicked()
 {
- //   QPushButton *button = (QPushButton *)sender();
-//    const char* str = qPrintable(ui->input_output->text());
-//    polish_notation(str);
     if(ui->input_output->text().contains("x")) {
         QString str_buf = ui->input_output->text();
         str_buf.replace("x", QString::number(0.1));
@@ -98,50 +95,6 @@ void MainWindow::on_pushButton_result_clicked()
         }
     }
 }
-
-//void MainWindow::digits_numbers()
-//{
-//    QPushButton *button = (QPushButton *)sender();
-
-//    double all_numbers;
-//    QString new_label;
-//    all_numbers = (ui->input_output->text() + button->text()).toDouble();
-//    new_label = QString::number(all_numbers, 'g', 15);
-
-//    ui->input_output->setText(new_label);
-//}
-
-
-//void MainWindow::on_pushButton_dot_clicked()
-//{
-//    ui->input_output->setText(ui->input_output->text() + ".");
-//}
-
-//void MainWindow::unary_plus_minus()
-//{
-//    QPushButton *button = (QPushButton *)sender();
-
-//    double all_numbers;
-//    QString new_label;
-
-//    if(button->text() == "+/-") {
-//        all_numbers = (ui->input_output->text()).toDouble();
-//        all_numbers = all_numbers * -1;
-//        new_label = QString::number(all_numbers, 'g', 15);
-
-//        ui->input_output->setText(new_label);
-//    }
-//}
-
-//void MainWindow::math_operations()
-//{
-//    QPushButton *button = (QPushButton *)sender();
-
-//    num_first = ui->input_output->text().toDouble();
-
-//    button->setChecked(true);
-//}
-
 
 void MainWindow::on_pushButton_dot_clicked()
 {
@@ -186,5 +139,13 @@ void MainWindow::on_pushButton_rbracket_clicked()
 void MainWindow::on_pushButton_x_clicked()
 {
     ui->input_output->setText(ui->input_output->text() + "x");
+}
+
+
+void MainWindow::on_credit_calc_clicked()
+{
+    cred = new credit;
+    cred->show();
+    cred->on_calculate_clicked();
 }
 

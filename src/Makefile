@@ -1,32 +1,38 @@
-CC=gcc
+GCC=gcc
 CFLAGS=-Wall -Wextra -Werror -g -std=c11
 LIBS=-lcheck
 LFLAGS=-fprofile-arcs -ftest-coverage
+LINUX = -lrt -lpthread -lm -lsubunit
+OS=$(shell uname -s)
 
-all: clean SmartCalc.a test
+all: clean test
 
-SmartCalc.a: SmartCalc.o
-	ar rcs SmartCalc.a SmartCalc.o
-	cp SmartCalc.a libSmartCalc.a
-	cp SmartCalc.a lSmartCalc.a
-	ranlib libSmartCalc.a
-	ranlib lSmartCalc.a
-
-SmartCalc.o: SmartCalc.c
-	$(CC) $(CFLAGS) -c SmartCalc.c -o SmartCalc.o
-
-test: SmartCalc.a
-	$(CC) $(CFLAGS) test.c SmartCalc.a -o test.out $(LIBS)
+test:
+ifeq ($(OS), Darwin)
+	$(GCC) $(CFLAGS) test.c SmartCalc.c -o test.out $(LIBS)
 	./test.out
+else
+	$(GCC) $(CFLAGS) test.c SmartCalc.c -o test.out $(LIBS) $(LINUX)
+	./test.out
+endif
 
 gcov_report: SmartCalc.c
-	$(CC) $(CFLAGS) $(LFLAGS) test.c SmartCalc.c -o test.out $(LIBS)
+ifeq ($(OS), Darwin)
+	$(GCC) $(CFLAGS) $(LFLAGS) test.c SmartCalc.c -o test.out $(LIBS)
+else
+	$(GCC) $(CFLAGS) $(LFLAGS) test.c SmartCalc.c -o test.out $(LIBS) $(LINUX)
+endif
 	./test.out
 	lcov -t "test" -o test.info -c -d .
 	genhtml -o report test.info
+	make open
 
 open:
+ifeq ($(OS), Darwin)
 	open report/index.html
+else
+	xdg-open report/index.html
+endif
 
 rebuild: clean all
 
@@ -35,14 +41,30 @@ check:
 	cppcheck --enable=all --suppress=missingIncludeSystem *.c *.h
 	python3 ../materials/linters/cpplint.py --extensions=c *.c *.h
 	make test
+ifeq ($(OS), Darwin)
 	CK_FORK=no leaks --atExit -- ./test.out
+else
+	valgrind ./test.out --leak-check=full
+endif
 	make clean
 	rm -rf CPPLINT.cfg
 
 clean:
-	rm -rf *.gc* *.o *.a *.out *.info test.out
+	rm -rf *.gc* *.o *.a *.out *.info test.out test.out.dSYM
 	rm -rf report
 
-Smart: SmartCalc.a
-	$(CC) $(CFLAGS) SmartCalc.a -o test.out $(LIBS)
-	./test.out
+install: 
+	make -C Release/ install
+
+uninstall: 
+	make -C Release/ uninstall
+	rm -rf Release/*.app
+
+dvi:
+	open ./readme.html
+
+dist:
+	make -C Release/ dist
+
+open_app:
+	make -C Release/ open

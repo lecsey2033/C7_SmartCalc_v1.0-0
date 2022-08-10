@@ -1,49 +1,11 @@
 #include "SmartCalc.h"
 
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-// #include <math.h>
-
-// typedef struct s_info {
-//     double number;
-//     int s_operator;
-//     int priority;
-//     int error;
-// } info;
-
-// typedef struct s_stack {
-//     info data;
-//     struct s_stack *next;
-// } t_stack;
-
-// double polish_notation(const char *function, int* error);
-// info divide_into_lexems(const char *function, int *i);
-// int find_of_number(const char* function, char* number, int* i);
-// info unary_or_not(const char* function, int* i);
-// double operation(t_stack **stack_of_number, t_stack *stack_of_operator, int* err);
-// void zeroing_info(info* data);
-// t_stack *create_node(info data);
-// void push(t_stack **stack, info data);
-// void pop(t_stack **stack);
-// void stack_print(t_stack *stack);
-// int check_of_func(const char* function, int i);
-
-// int main() {
-//     const char function[500] = "jhg";
-//     int err = 0;
-//     printf("%f\n", polish_notation(function, &err));
-//     printf("%d", err);
-
-// }
-
 double polish_notation(const char *function, int *err) {
     info data;
     t_stack *stack_of_number = NULL;
     t_stack *stack_of_operator = NULL;
     int begin_stack_of_number = 0;
     int begin_stack_of_operator = 0;
-    double number = 0;
     int bracket_count = 0;
 
     zeroing_info(&data);
@@ -51,9 +13,10 @@ double polish_notation(const char *function, int *err) {
         data = divide_into_lexems(function, &i);
         if (data.s_operator >= 11 && data.s_operator <= 19) {
             *err = check_of_func(function, i);
-            if (*err == 1) { data.error = 1; }
+            if (*err == 1) {
+                data.error = 1;
+            }
         }
-        // printf("oper %d\n", data.s_operator);
         if (data.error == 1) {
             *err = 1;
             break;
@@ -81,10 +44,7 @@ double polish_notation(const char *function, int *err) {
                     break;
                 }
                 while (stack_of_operator->data.s_operator != 1) {
-                    number =
-                        operation(&stack_of_number, stack_of_operator, err);
-                    stack_of_number->data.number = number;
-                    pop(&stack_of_operator);
+                    operation_n_pop(&stack_of_number, &stack_of_operator, err);
                 }
                 pop(&stack_of_operator);
                 if (!stack_of_operator) {
@@ -92,20 +52,15 @@ double polish_notation(const char *function, int *err) {
                 } else {
                     if (stack_of_operator->data.s_operator >= 11 &&
                         stack_of_operator->data.s_operator <= 19) {
-                        number =
-                            operation(&stack_of_number, stack_of_operator, err);
-                        stack_of_number->data.number = number;
-                        pop(&stack_of_operator);
+                        operation_n_pop(&stack_of_number, &stack_of_operator,
+                                        err);
                     }
                 }
             } else {
                 while (stack_of_operator) {
-                    if (data.priority <= stack_of_operator->data.priority &&
-                        data.s_operator != 1) {
-                        number =
-                            operation(&stack_of_number, stack_of_operator, err);
-                        stack_of_number->data.number = number;
-                        pop(&stack_of_operator);
+                    if (data.priority <= stack_of_operator->data.priority) {
+                        operation_n_pop(&stack_of_number, &stack_of_operator,
+                                        err);
                     } else {
                         break;
                     }
@@ -117,38 +72,33 @@ double polish_notation(const char *function, int *err) {
                 }
             }
         }
-        // if (data.s_operator) {
-        //     printf("%d ", data.s_operator);
-        // } else {
-        //     printf("%f ", data.number);
-        // }
     }
     if (begin_stack_of_number == 0 || bracket_count != 0) {
         *err = 1;
     }
-    // stack_print(stack_of_operator);
     double result = 0;
     if (*err == 0) {
         while (stack_of_operator) {
-            number = operation(&stack_of_number, stack_of_operator, err);
-            stack_of_number->data.number = number;
-            pop(&stack_of_operator);
+            operation_n_pop(&stack_of_number, &stack_of_operator, err);
         }
-        // printf("%f", stack_of_number->data.number);
         result = stack_of_number->data.number;
         pop(&stack_of_number);
     }
-    if (stack_of_number && stack_of_number->data.number) { *err = 1; }
-    
-    // stack_print(stack_of_number);
-    // printf("\n");
-    // stack_print(stack_of_operator);
+    if (stack_of_number && stack_of_number->data.number) {
+        *err = 1;
+    }
+    while (stack_of_number) {
+        pop(&stack_of_number);
+    }
+    while (stack_of_operator) {
+        pop(&stack_of_operator);
+    }
     return result;
 }
 
 info divide_into_lexems(const char *function, int *i) {
     info data;
-    char number[100] = "";
+    char* number = (char*)calloc(200, sizeof(char));
 
     zeroing_info(&data);
     if (function[*i] >= '0' && function[*i] <= '9') {
@@ -163,7 +113,7 @@ info divide_into_lexems(const char *function, int *i) {
         data.s_operator = 2;
         *i += 1;
     } else if (function[*i] == '+' || function[*i] == '-') {
-        data = unary_or_not(function, i);
+        data = unary_or_not(function, *i);
         *i += 1;
     } else if (function[*i] == '*') {
         data.s_operator = 5;
@@ -231,20 +181,21 @@ info divide_into_lexems(const char *function, int *i) {
     }
     if ((data.s_operator >= 11 && data.s_operator <= 19 &&
          function[*i] != '(') ||
-        (data.s_operator >= 3 && data.s_operator <= 8 &&
+        (data.s_operator >= 3 && data.s_operator <= 10 &&
          (function[*i] == '+' || function[*i] == '*' || function[*i] == '/' ||
           function[*i] == '^' || function[*i] == 'm'))) {
         data.error = 1;
     }
+    free(number);
     return data;
 }
 
-info unary_or_not(const char *function, int *i) {
+info unary_or_not(const char *function, int i) {
     info data;
 
     zeroing_info(&data);
-    if (*i == 0 || (*i != 0 && function[*i - 1] == '(')) {
-        if (function[*i] == '+') {
+    if (i == 0 || function[i - 1] == '(') {
+        if (function[i] == '+') {
             data.s_operator = 9;
             data.priority = 5;
         } else {
@@ -252,7 +203,7 @@ info unary_or_not(const char *function, int *i) {
             data.priority = 5;
         }
     } else {
-        if (function[*i] == '+') {
+        if (function[i] == '+') {
             data.s_operator = 3;
             data.priority = 1;
         } else {
@@ -374,7 +325,7 @@ double operation(t_stack **stack_of_number, t_stack *stack_of_operator,
     return result;
 }
 
-int check_of_func(const char* function, int i) {
+int check_of_func(const char *function, int i) {
     int check_of_bracket = 0;
     int err = 0;
     int amount_of_numbers = 0;
@@ -385,9 +336,9 @@ int check_of_func(const char* function, int i) {
         for (; function[i] && check_of_bracket != 0; i++) {
             if (function[i] >= '0' && function[i] <= '9') {
                 amount_of_numbers++;
-            } else if(function[i] == '(') {
+            } else if (function[i] == '(') {
                 check_of_bracket++;
-            } else if(function[i] == ')') {
+            } else if (function[i] == ')') {
                 check_of_bracket--;
             }
         }
@@ -398,6 +349,14 @@ int check_of_func(const char* function, int i) {
         err = 1;
     }
     return err;
+}
+
+void operation_n_pop(t_stack **stack_of_number, t_stack **stack_of_operator,
+                     int *err) {
+    double number = 0;
+    number = operation(stack_of_number, (*stack_of_operator), err);
+    (*stack_of_number)->data.number = number;
+    pop(stack_of_operator);
 }
 
 void zeroing_info(info *data) {
@@ -411,7 +370,7 @@ t_stack *create_node(info data) {
     t_stack *node = (t_stack *)malloc(sizeof(t_stack));
     if (node == NULL) {
         printf("malloc error\n");
-        exit(1);  // учитывать
+        exit(1);
     }
     node->data = data;
     node->next = NULL;
@@ -430,21 +389,4 @@ void pop(t_stack **stack) {
 
     *stack = tmp->next;
     free(tmp);
-}
-
-void stack_print(t_stack *stack) {
-    t_stack *tmp = stack;
-
-    while (tmp) {
-        if (!tmp->data.s_operator || tmp->data.s_operator == 20) {
-            if (tmp->data.s_operator == 20) {
-                printf("%d ", tmp->data.s_operator);
-            } else {
-                printf("%f ", tmp->data.number);
-            }
-        } else {
-            printf("%d ", tmp->data.s_operator);
-        }
-        tmp = tmp->next;
-    }
 }
